@@ -1,0 +1,86 @@
+[
+  {
+    "slug": "weddings",
+    "title": "Weddings",
+    "kicker": "WEDDING EXPERIENCES",
+    "text": "Elegant venues, guest stays and event coordination brought together for your big day.",
+    "image": "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1400&q=85",
+    "services": [
+      "Venue selection",
+      "Guest accommodation",
+      "Decor coordination",
+      "Catering coordination"
+    ],
+    "id": "weddings"
+  },
+  {
+    "slug": "corporate-events",
+    "title": "Corporate Events",
+    "kicker": "CORPORATE EXPERIENCES",
+    "text": "Professional spaces and hospitality support for meetings, conferences, launches and team gatherings.",
+    "image": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=1400&q=85",
+    "services": [
+      "Conference venues",
+      "Room blocks",
+      "Food & beverage coordination",
+      "Event support"
+    ],
+    "id": "corporate-events"
+  },
+  {
+    "slug": "birthdays-parties",
+    "title": "Birthdays & Parties",
+    "kicker": "PRIVATE CELEBRATIONS",
+    "text": "Celebrate milestones with the right venue, comfortable stays and a team that handles the details.",
+    "image": "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1400&q=85",
+    "services": [
+      "Venue selection",
+      "Decoration coordination",
+      "Catering",
+      "Guest support"
+    ],
+    "id": "birthdays-parties"
+  },
+  {
+    "slug": "engagements",
+    "title": "Engagements",
+    "kicker": "SPECIAL BEGINNINGS",
+    "text": "Intimate venues and hospitality arrangements designed around your special moment.",
+    "image": "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1400&q=85",
+    "services": [
+      "Venue selection",
+      "Accommodation",
+      "Decoration coordination",
+      "Catering"
+    ],
+    "id": "engagements"
+  },
+  {
+    "slug": "anniversaries",
+    "title": "Anniversaries",
+    "kicker": "MILESTONE MOMENTS",
+    "text": "Create a memorable celebration with a beautiful setting and effortless hospitality.",
+    "image": "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1400&q=85",
+    "services": [
+      "Venue selection",
+      "Private dining options",
+      "Accommodation",
+      "Celebration coordination"
+    ],
+    "id": "anniversaries"
+  },
+  {
+    "slug": "private-events",
+    "title": "Private Events",
+    "kicker": "PRIVATE GATHERINGS",
+    "text": "Flexible spaces and hospitality solutions for family gatherings, social occasions and special events.",
+    "image": "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1400&q=85",
+    "services": [
+      "Venue sourcing",
+      "Guest stays",
+      "Catering coordination",
+      "Event support"
+    ],
+    "id": "private-events"
+  }
+]

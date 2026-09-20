@@ -1,0 +1,30 @@
+[
+  {
+    "id": "SW-1789916831008",
+    "name": "demo 1 ",
+    "phone": "1212121212",
+    "email": "demo@gmail.com",
+    "inquiryType": "Hotel / Stay",
+    "destination": "ud",
+    "checkIn": "2026-10-01",
+    "checkOut": "2026-10-02",
+    "guests": "10",
+    "message": "good",
+    "status": "New",
+    "createdAt": "2026-09-20T15:07:11.008Z"
+  },
+  {
+    "id": "SW-1789916212381",
+    "name": "raj",
+    "phone": "9265132132213",
+    "email": "demo@gmail.com",
+    "inquiryType": "Hotel / Stay",
+    "destination": "udaipur",
+    "checkIn": "2026-09-11",
+    "checkOut": "2026-09-01",
+    "guests": "10",
+    "message": "good",
+    "status": "New",
+    "createdAt": "2026-09-20T14:56:52.382Z"
+  }
+]

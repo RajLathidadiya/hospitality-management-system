@@ -1,0 +1,3 @@
+import {NextResponse} from 'next/server';import {isAdmin} from '@/lib/auth';import {readCollection,writeCollection} from '@/lib/db';
+export async function GET(){if(!await isAdmin())return NextResponse.json({error:'Unauthorized'},{status:401});return NextResponse.json(await readCollection('inquiries.json'))}
+export async function POST(req:Request){const b=await req.json();const l=await readCollection<any>('inquiries.json');const x={id:`SW-${Date.now()}`,...b,status:b.status||'New',createdAt:new Date().toISOString()};l.unshift(x);await writeCollection('inquiries.json',l);return NextResponse.json(x,{status:201})}
