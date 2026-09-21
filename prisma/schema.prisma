@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Property {
+  id          String   @id
+  slug        String   @unique
+  name        String
+  type        String
+  location    String
+  city        String
+  state       String
+  price       Float    @default(0)
+  rating      Float    @default(0)
+  guests      Int      @default(0)
+  featured    Boolean  @default(false)
+  image       String   @db.Text
+  description String   @db.Text
+  amenities   Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  rooms       Room[]
+  createdGallery GalleryItem[]
+  reviews     Review[]
+
+  @@index([city])
+  @@index([type])
+  @@index([featured])
+}
+
+model Room {
+  propertyId String
+  id         String
+  name       String
+  price      Float    @default(0)
+  capacity   Int      @default(2)
+  bed        String
+  size       String
+  image      String   @db.Text
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@id([propertyId, id])
+}
+
+model Package {
+  id          String   @id
+  slug        String   @unique
+  title       String
+  description String   @db.Text
+  image       String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Event {
+  id          String   @id
+  slug        String   @unique
+  title       String
+  kicker      String
+  text        String   @db.Text
+  image       String   @db.Text
+  services    Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GalleryItem {
+  id         String   @id
+  title      String
+  category   String
+  image      String   @db.Text
+  featured   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([featured])
+}
+
+model Review {
+  id         String   @id
+  name       String
+  rating     Int      @default(5)
+  text       String   @db.Text
+  property   String
+  propertyId String?
+  status     String   @default("Published")
+  createdAt  DateTime @default(now())
+  propertyRef Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([propertyId])
+}
+
+model Customer {
+  id        String   @id
+  name      String
+  phone     String?
+  email     String?
+  city      String?
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+  @@index([email])
+}
+
+model Inquiry {
+  id          String   @id
+  name        String
+  phone       String
+  email       String?
+  inquiryType String
+  destination String?
+  checkIn     String?
+  checkOut    String?
+  guests      String?
+  message     String?  @db.Text
+  status      String   @default("New")
+  createdAt   DateTime @default(now())
+
+  @@index([phone])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Setting {
+  id          String   @id
+  businessName String
+  phone       String
+  whatsapp    String
+  email       String
+  address     String
+  instagram   String
+  facebook    String
+  footerText  String
+  updatedAt   DateTime @updatedAt
+}
