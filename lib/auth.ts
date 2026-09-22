@@ -30,6 +30,8 @@ export function makeToken(email: string) {
   return Buffer.from(`${email}:${SECRET}`).toString('base64url');
 }
 
+export const makeSuperAdminToken = makeToken;
+
 export async function isAdmin() {
   const jar = await cookies();
 
