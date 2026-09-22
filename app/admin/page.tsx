@@ -510,145 +510,154 @@
         setShowRoom(true);
     }
 
+    async function adminRequest(url: string, method: string, body: any) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+
+        try {
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(body),
+            signal: controller.signal,
+        });
+
+        const raw = await response.text();
+        let data: any = {};
+        try {
+            data = raw ? JSON.parse(raw) : {};
+        } catch {
+            data = { error: raw || 'Unexpected server response' };
+        }
+
+        if (!response.ok) {
+            throw new Error(
+            data.error ||
+                data.message ||
+                `Request failed (${response.status})`
+            );
+        }
+
+        return data;
+        } catch (error: any) {
+        if (error?.name === 'AbortError') {
+            throw new Error('Request timed out. Please check the database/server connection.');
+        }
+        throw error;
+        } finally {
+        clearTimeout(timeout);
+        }
+    }
+
     async function saveProperty(e: any) {
         e.preventDefault();
+        setMessage('Saving property...');
 
+        try {
         const body = {
-        ...propForm,
-        price: Number(propForm.price),
-        guests: Number(propForm.guests),
-        amenities: String(propForm.amenities)
+            ...propForm,
+            price: Number(propForm.price) || 0,
+            guests: Number(propForm.guests) || 0,
+            amenities: String(propForm.amenities || '')
             .split(',')
             .map((x: string) => x.trim())
             .filter(Boolean),
         };
 
         const url = editingProp
-        ? `/api/properties/${editingProp.slug}`
-        : '/api/properties';
+            ? `/api/properties/${editingProp.slug}`
+            : '/api/properties';
 
-        const r = await fetch(url, {
-        method: editingProp ? 'PUT' : 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-        });
-
-        const d = await r.json();
-
-        if (!r.ok) {
-        setMessage(d.error || 'Could not save');
-        return;
-        }
+        await adminRequest(url, editingProp ? 'PUT' : 'POST', body);
 
         setMessage(
-        editingProp
+            editingProp
             ? 'Property updated successfully'
             : 'Property added successfully'
         );
-
         setShowProp(false);
         setEditingProp(null);
         setPropForm(blankProperty);
-
-        load();
+        await load();
+        } catch (error: any) {
+        console.error('Save property error:', error);
+        setMessage(error?.message || 'Could not save property');
+        }
     }
 
     async function saveEvent(e: any) {
         e.preventDefault();
+        setMessage('Saving event...');
 
+        try {
         const body = {
-        ...eventForm,
-        services: String(eventForm.services)
+            ...eventForm,
+            services: String(eventForm.services || '')
             .split(',')
             .map((x: string) => x.trim())
             .filter(Boolean),
         };
 
         const url = editingEvent
-        ? `/api/events/${editingEvent.slug}`
-        : '/api/events';
+            ? `/api/events/${editingEvent.slug}`
+            : '/api/events';
 
-        const r = await fetch(url, {
-        method: editingEvent ? 'PUT' : 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-        });
-
-        const d = await r.json();
-
-        if (!r.ok) {
-        setMessage(d.error || 'Could not save');
-        return;
-        }
+        await adminRequest(url, editingEvent ? 'PUT' : 'POST', body);
 
         setMessage(
-        editingEvent
+            editingEvent
             ? 'Event updated successfully'
             : 'Event added successfully'
         );
-
         setShowEvent(false);
         setEditingEvent(null);
         setEventForm(blankEvent);
-
-        load();
+        await load();
+        } catch (error: any) {
+        console.error('Save event error:', error);
+        setMessage(error?.message || 'Could not save event');
+        }
     }
 
     async function savePackage(e: any) {
         e.preventDefault();
+        setMessage('Saving package...');
 
-        const services = String(
-        packageForm.services || ''
-        )
-        .split(',')
-        .map((x: string) => x.trim())
-        .filter(Boolean);
+        try {
+        const services = String(packageForm.services || '')
+            .split(',')
+            .map((x: string) => x.trim())
+            .filter(Boolean);
 
         const body = {
-        title: packageForm.title,
-        name: packageForm.title,
-        description: packageForm.description,
-        text: packageForm.description,
-        image: packageForm.image,
-        services,
+            title: packageForm.title,
+            name: packageForm.title,
+            description: packageForm.description,
+            text: packageForm.description,
+            image: packageForm.image,
+            services,
         };
 
         const url = editingPackage
-        ? `/api/packages/${editingPackage.slug}`
-        : '/api/packages';
+            ? `/api/packages/${editingPackage.slug}`
+            : '/api/packages';
 
-        const r = await fetch(url, {
-        method: editingPackage ? 'PUT' : 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-        });
-
-        const d = await r.json();
-
-        if (!r.ok) {
-        setMessage(
-            d.error || 'Could not save package'
-        );
-        return;
-        }
+        await adminRequest(url, editingPackage ? 'PUT' : 'POST', body);
 
         setMessage(
-        editingPackage
+            editingPackage
             ? 'Package updated successfully'
             : 'Package added successfully'
         );
-
         setShowPackage(false);
         setEditingPackage(null);
         setPackageForm(blankPackage);
-
-        load();
+        await load();
+        } catch (error: any) {
+        console.error('Save package error:', error);
+        setMessage(error?.message || 'Could not save package');
+        }
     }
 
     async function saveRoom(e: any) {
@@ -975,7 +984,7 @@
             )}
 
             {showGallery && (
-              <Modal title={editingGallery ? 'Edit Gallery Item' : 'Add Gallery Item'} onClose={() => { setShowGallery(false); setEditingGallery(null); }}>
+              <Modal title={editingGallery ? 'Edit Gallery Item' : 'Add Gallery Item'} status={message} onClose={() => { setShowGallery(false); setEditingGallery(null); }}>
                 <form className="admin-form" onSubmit={saveGallery}>
                   <label>Title<input value={galleryForm.title} onChange={(e) => setGalleryForm({ ...galleryForm, title: e.target.value })} placeholder="Pool, Room, Wedding setup..." /></label>
                   <label>Category<select value={galleryForm.category} onChange={(e) => setGalleryForm({ ...galleryForm, category: e.target.value })}><option>General</option><option>Properties</option><option>Rooms</option><option>Events</option><option>Weddings</option><option>Food</option></select></label>
@@ -987,7 +996,7 @@
             )}
 
             {showReview && (
-              <Modal title={editingReview ? 'Edit Review' : 'Add Review'} onClose={() => { setShowReview(false); setEditingReview(null); }}>
+              <Modal title={editingReview ? 'Edit Review' : 'Add Review'} status={message} onClose={() => { setShowReview(false); setEditingReview(null); }}>
                 <form className="admin-form" onSubmit={saveReview}>
                   <label>Customer Name<input required value={reviewForm.name} onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })} /></label>
                   <div className="form-two"><label>Rating<select value={reviewForm.rating} onChange={(e) => setReviewForm({ ...reviewForm, rating: Number(e.target.value) })}><option value="5">5 / 5</option><option value="4">4 / 5</option><option value="3">3 / 5</option><option value="2">2 / 5</option><option value="1">1 / 5</option></select></label><label>Status<select value={reviewForm.status} onChange={(e) => setReviewForm({ ...reviewForm, status: e.target.value })}><option>Published</option><option>Hidden</option></select></label></div>
@@ -1007,6 +1016,7 @@
                     ? 'Edit Property'
                     : 'Add Property'
                 }
+                status={message}
                 onClose={() => {
                 setShowProp(false);
                 setEditingProp(null);
@@ -1149,7 +1159,7 @@
                     />
                 </label>
 
-                <button className="admin-primary">
+                <button type="submit" className="admin-primary">
                     {editingProp
                     ? 'Update Property'
                     : 'Save Property'}
@@ -1167,6 +1177,7 @@
                     ? 'Edit Event'
                     : 'Add Event'
                 }
+                status={message}
                 onClose={() => {
                 setShowEvent(false);
                 setEditingEvent(null);
@@ -1255,7 +1266,7 @@
                     />
                 </label>
 
-                <button className="admin-primary">
+                <button type="submit" className="admin-primary">
                     {editingEvent
                     ? 'Update Event'
                     : 'Save Event'}
@@ -1273,6 +1284,7 @@
                     ? 'Edit Package'
                     : 'Add Package'
                 }
+                status={message}
                 onClose={() => {
                 setShowPackage(false);
                 setEditingPackage(null);
@@ -1349,7 +1361,7 @@
                     />
                 </label>
 
-                <button className="admin-primary">
+                <button type="submit" className="admin-primary">
                     {editingPackage
                     ? 'Update Package'
                     : 'Save Package'}
@@ -1363,6 +1375,7 @@
             {showRoom && roomProperty && (
             <Modal
                 title={`${editingRoom ? 'Edit' : 'Add'} Room — ${roomProperty.name}`}
+                status={message}
                 onClose={() => {
                 setShowRoom(false);
                 setEditingRoom(null);
@@ -2579,10 +2592,12 @@
 
     function Modal({
     title,
+    status,
     onClose,
     children,
     }: {
     title: string;
+    status?: string;
     onClose: () => void;
     children: React.ReactNode;
     }) {
@@ -2601,12 +2616,25 @@
             <h2>{title}</h2>
 
             <button
+                type="button"
                 className="modal-close"
                 onClick={onClose}
             >
                 ×
             </button>
             </div>
+
+            {status && (
+            <div
+                className={`admin-modal-status ${
+                /saving|updated|added|saved|deleted|success/i.test(status)
+                    ? 'is-info'
+                    : 'is-error'
+                }`}
+            >
+                {status}
+            </div>
+            )}
 
             {children}
         </div>
