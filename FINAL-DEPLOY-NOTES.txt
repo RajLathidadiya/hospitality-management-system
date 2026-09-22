@@ -1,0 +1,36 @@
+SAWARIYA HOSPITALITY — FINAL ADMIN + SUPERADMIN BUILD
+
+Included fixes:
+1. Admin /admin route remains login-protected by middleware.
+2. Admin login fields start blank; browser autofill is disabled.
+3. Property, Event, Package and Room save requests now have robust error handling and a 15-second timeout.
+4. New Property/Event/Package/Room records are created as PENDING.
+5. Superadmin approval portal is included at /superadmin.
+6. Superadmin can Approve/Reject pending Property, Room, Event and Package requests.
+7. Public website reads only APPROVED Property/Room/Event/Package records.
+8. Prisma schema includes approval status fields.
+9. Superadmin authentication/token helpers are included.
+
+IMPORTANT — DATABASE:
+If the production MySQL database does not yet have the new status columns, run ONE of these after deploying:
+
+  npx prisma db push
+
+OR execute prisma/approval-migration.sql in phpMyAdmin.
+
+Do not run both if the status columns already exist.
+
+HOSTINGER ENVIRONMENT VARIABLES:
+DATABASE_URL=...
+ADMIN_EMAIL=...
+ADMIN_PASSWORD=...
+ADMIN_SECRET=...
+SUPERADMIN_EMAIL=...
+SUPERADMIN_PASSWORD=...
+SUPERADMIN_SECRET=...
+
+Then redeploy and test:
+/admin/login
+/admin
+/superadmin/login
+/superadmin

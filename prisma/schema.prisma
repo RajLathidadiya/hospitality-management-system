@@ -19,6 +19,7 @@ model Property {
   rating      Float    @default(0)
   guests      Int      @default(0)
   featured    Boolean  @default(false)
+  status      String   @default("APPROVED")
   image       String   @db.Text
   description String   @db.Text
   amenities   Json
@@ -42,6 +43,7 @@ model Room {
   bed        String
   size       String
   image      String   @db.Text
+  status     String   @default("APPROVED")
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@id([propertyId, id])
@@ -53,6 +55,7 @@ model Package {
   title       String
   description String   @db.Text
   image       String   @db.Text
+  status      String   @default("APPROVED")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -65,6 +68,7 @@ model Event {
   text        String   @db.Text
   image       String   @db.Text
   services    Json
+  status      String   @default("APPROVED")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

@@ -10,6 +10,7 @@
     bed: string;
     size: string;
     image: string;
+    status?: string;
     };
 
     type Property = {
@@ -24,6 +25,7 @@
     description: string;
     amenities: string[];
     rooms: Room[];
+    status?: string;
     };
 
     type Event = {
@@ -34,6 +36,7 @@
     text: string;
     image: string;
     services: string[];
+    status?: string;
     };
 
     type PackageItem = {
@@ -43,6 +46,7 @@
     description: string;
     image: string;
     services: string[];
+    status?: string;
     };
 
     type GalleryItem = {
@@ -180,6 +184,8 @@
     'Completed',
     'Cancelled',
     ];
+
+    const approvalBadge = (status?: string) => status && status !== 'APPROVED' ? <span style={{ display: 'inline-block', marginTop: 6, padding: '3px 8px', borderRadius: 999, fontSize: 11, fontWeight: 700, background: status === 'PENDING' ? '#fff7ed' : '#fef2f2', color: status === 'PENDING' ? '#c2410c' : '#b91c1c' }}>{status === 'PENDING' ? 'PENDING APPROVAL' : status}</span> : null;
 
     export default function Admin() {
     const [active, setActive] = useState('Dashboard');
@@ -574,7 +580,7 @@
         setMessage(
             editingProp
             ? 'Property updated successfully'
-            : 'Property added successfully'
+            : 'Property submitted for Superadmin approval'
         );
         setShowProp(false);
         setEditingProp(null);
@@ -608,7 +614,7 @@
         setMessage(
             editingEvent
             ? 'Event updated successfully'
-            : 'Event added successfully'
+            : 'Event submitted for Superadmin approval'
         );
         setShowEvent(false);
         setEditingEvent(null);
@@ -648,7 +654,7 @@
         setMessage(
             editingPackage
             ? 'Package updated successfully'
-            : 'Package added successfully'
+            : 'Package submitted for Superadmin approval'
         );
         setShowPackage(false);
         setEditingPackage(null);
@@ -693,7 +699,7 @@
         setMessage(
         editingRoom
             ? 'Room updated successfully'
-            : 'Room added successfully'
+            : 'Room submitted for Superadmin approval'
         );
 
         setShowRoom(false);
@@ -984,7 +990,7 @@
             )}
 
             {showGallery && (
-              <Modal title={editingGallery ? 'Edit Gallery Item' : 'Add Gallery Item'} status={message} onClose={() => { setShowGallery(false); setEditingGallery(null); }}>
+              <Modal title={editingGallery ? 'Edit Gallery Item' : 'Add Gallery Item'} onClose={() => { setShowGallery(false); setEditingGallery(null); }}>
                 <form className="admin-form" onSubmit={saveGallery}>
                   <label>Title<input value={galleryForm.title} onChange={(e) => setGalleryForm({ ...galleryForm, title: e.target.value })} placeholder="Pool, Room, Wedding setup..." /></label>
                   <label>Category<select value={galleryForm.category} onChange={(e) => setGalleryForm({ ...galleryForm, category: e.target.value })}><option>General</option><option>Properties</option><option>Rooms</option><option>Events</option><option>Weddings</option><option>Food</option></select></label>
@@ -996,7 +1002,7 @@
             )}
 
             {showReview && (
-              <Modal title={editingReview ? 'Edit Review' : 'Add Review'} status={message} onClose={() => { setShowReview(false); setEditingReview(null); }}>
+              <Modal title={editingReview ? 'Edit Review' : 'Add Review'} onClose={() => { setShowReview(false); setEditingReview(null); }}>
                 <form className="admin-form" onSubmit={saveReview}>
                   <label>Customer Name<input required value={reviewForm.name} onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })} /></label>
                   <div className="form-two"><label>Rating<select value={reviewForm.rating} onChange={(e) => setReviewForm({ ...reviewForm, rating: Number(e.target.value) })}><option value="5">5 / 5</option><option value="4">4 / 5</option><option value="3">3 / 5</option><option value="2">2 / 5</option><option value="1">1 / 5</option></select></label><label>Status<select value={reviewForm.status} onChange={(e) => setReviewForm({ ...reviewForm, status: e.target.value })}><option>Published</option><option>Hidden</option></select></label></div>
@@ -1016,7 +1022,6 @@
                     ? 'Edit Property'
                     : 'Add Property'
                 }
-                status={message}
                 onClose={() => {
                 setShowProp(false);
                 setEditingProp(null);
@@ -1159,7 +1164,7 @@
                     />
                 </label>
 
-                <button type="submit" className="admin-primary">
+                <button className="admin-primary">
                     {editingProp
                     ? 'Update Property'
                     : 'Save Property'}
@@ -1177,7 +1182,6 @@
                     ? 'Edit Event'
                     : 'Add Event'
                 }
-                status={message}
                 onClose={() => {
                 setShowEvent(false);
                 setEditingEvent(null);
@@ -1266,7 +1270,7 @@
                     />
                 </label>
 
-                <button type="submit" className="admin-primary">
+                <button className="admin-primary">
                     {editingEvent
                     ? 'Update Event'
                     : 'Save Event'}
@@ -1284,7 +1288,6 @@
                     ? 'Edit Package'
                     : 'Add Package'
                 }
-                status={message}
                 onClose={() => {
                 setShowPackage(false);
                 setEditingPackage(null);
@@ -1361,7 +1364,7 @@
                     />
                 </label>
 
-                <button type="submit" className="admin-primary">
+                <button className="admin-primary">
                     {editingPackage
                     ? 'Update Package'
                     : 'Save Package'}
@@ -1375,7 +1378,6 @@
             {showRoom && roomProperty && (
             <Modal
                 title={`${editingRoom ? 'Edit' : 'Add'} Room — ${roomProperty.name}`}
-                status={message}
                 onClose={() => {
                 setShowRoom(false);
                 setEditingRoom(null);
@@ -1590,6 +1592,7 @@
 
                 <div>
                 <strong>{p.name}</strong>
+                {approvalBadge(p.status)}
 
                 <small>
                     {p.type} · {p.location} · ₹
@@ -1698,6 +1701,7 @@
                         <strong>
                         {r.name}
                         </strong>
+                        {approvalBadge(r.status)}
 
                         <small>
                         ₹
@@ -1795,6 +1799,7 @@
                 <strong>
                     {x.title}
                 </strong>
+                {approvalBadge(x.status)}
 
                 <small>
                     {x.kicker} ·{' '}
@@ -1883,6 +1888,7 @@
                     <strong>
                     {x.title}
                     </strong>
+                    {approvalBadge(x.status)}
 
                     <small>
                     {x.services?.length || 0}{' '}
@@ -2592,12 +2598,10 @@
 
     function Modal({
     title,
-    status,
     onClose,
     children,
     }: {
     title: string;
-    status?: string;
     onClose: () => void;
     children: React.ReactNode;
     }) {
@@ -2616,25 +2620,12 @@
             <h2>{title}</h2>
 
             <button
-                type="button"
                 className="modal-close"
                 onClick={onClose}
             >
                 ×
             </button>
             </div>
-
-            {status && (
-            <div
-                className={`admin-modal-status ${
-                /saving|updated|added|saved|deleted|success/i.test(status)
-                    ? 'is-info'
-                    : 'is-error'
-                }`}
-            >
-                {status}
-            </div>
-            )}
 
             {children}
         </div>

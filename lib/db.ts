@@ -22,11 +22,13 @@ function toIso(value: Date | string | null | undefined) {
   return value instanceof Date ? value.toISOString() : value || new Date().toISOString();
 }
 
-export async function readCollection<T>(name: string, fallback: T[] = []): Promise<T[]> {
+export async function readCollection<T>(name: string, fallback: T[] = [], options: { includeUnpublished?: boolean } = {}): Promise<T[]> {
+  const includeUnpublished = options.includeUnpublished === true;
   switch (name) {
     case "properties.json": {
       const rows = await prisma.property.findMany({
-        include: { rooms: true },
+        where: includeUnpublished ? undefined : { status: "APPROVED" },
+        include: { rooms: { where: includeUnpublished ? undefined : { status: "APPROVED" } } },
         orderBy: { createdAt: "asc" },
       });
       return rows.map((p) => ({
@@ -41,6 +43,7 @@ export async function readCollection<T>(name: string, fallback: T[] = []): Promi
         rating: p.rating,
         guests: p.guests,
         featured: p.featured,
+        status: p.status,
         image: p.image,
         description: p.description,
         amenities: parseJson<string[]>(p.amenities, []),
@@ -52,23 +55,25 @@ export async function readCollection<T>(name: string, fallback: T[] = []): Promi
           bed: r.bed,
           size: r.size,
           image: r.image,
+          status: r.status,
         })),
       })) as T[];
     }
 
     case "packages.json": {
-      const rows = await prisma.package.findMany({ orderBy: { createdAt: "asc" } });
+      const rows = await prisma.package.findMany({ where: includeUnpublished ? undefined : { status: "APPROVED" }, orderBy: { createdAt: "asc" } });
       return rows.map((p) => ({
         id: p.id,
         slug: p.slug,
         title: p.title,
         description: p.description,
         image: p.image,
+        status: p.status,
       })) as T[];
     }
 
     case "events.json": {
-      const rows = await prisma.event.findMany({ orderBy: { createdAt: "asc" } });
+      const rows = await prisma.event.findMany({ where: includeUnpublished ? undefined : { status: "APPROVED" }, orderBy: { createdAt: "asc" } });
       return rows.map((e) => ({
         id: e.id,
         slug: e.slug,
@@ -76,6 +81,7 @@ export async function readCollection<T>(name: string, fallback: T[] = []): Promi
         kicker: e.kicker,
         text: e.text,
         image: e.image,
+        status: e.status,
         services: parseJson<string[]>(e.services, []),
       })) as T[];
     }
@@ -181,6 +187,7 @@ export async function writeCollection<T extends Record<string, any>>(
               rating: Number(p.rating || 0),
               guests: Number(p.guests || 0),
               featured: Boolean(p.featured),
+              status: String(p.status || "APPROVED"),
               image: String(p.image || ""),
               description: String(p.description || ""),
               amenities: Array.isArray(p.amenities) ? p.amenities : [],
@@ -193,6 +200,7 @@ export async function writeCollection<T extends Record<string, any>>(
                   bed: String(r.bed || "King Bed"),
                   size: String(r.size || ""),
                   image: String(r.image || ""),
+                  status: String(r.status || "APPROVED"),
                 })),
               },
             },
@@ -212,6 +220,7 @@ export async function writeCollection<T extends Record<string, any>>(
               title: String(p.title || ""),
               description: String(p.description || ""),
               image: String(p.image || ""),
+              status: String(p.status || "APPROVED"),
             },
           });
         }
@@ -230,6 +239,7 @@ export async function writeCollection<T extends Record<string, any>>(
               kicker: String(e.kicker || ""),
               text: String(e.text || ""),
               image: String(e.image || ""),
+              status: String(e.status || "APPROVED"),
               services: Array.isArray(e.services) ? e.services : [],
             },
           });

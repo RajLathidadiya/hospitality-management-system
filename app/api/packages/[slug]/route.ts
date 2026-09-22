@@ -15,7 +15,7 @@ export async function PUT(
   const { slug } = await params;
   const body = await req.json();
 
-  const packages = await readCollection<any>('packages.json');
+  const packages = await readCollection<any>('packages.json', [], { includeUnpublished: true });
   const index = packages.findIndex((item: any) => item.slug === slug);
 
   if (index === -1) {
@@ -49,7 +49,7 @@ export async function DELETE(
 
   const { slug } = await params;
 
-  const packages = await readCollection<any>('packages.json');
+  const packages = await readCollection<any>('packages.json', [], { includeUnpublished: true });
   const filtered = packages.filter((item: any) => item.slug !== slug);
 
   if (filtered.length === packages.length) {
