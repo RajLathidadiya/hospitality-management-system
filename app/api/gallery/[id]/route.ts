@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { readCollection, writeCollection } from "@/lib/db";
+import { isAdmin } from "@/lib/auth";
 
 type GalleryItem = { id: string; title: string; category: string; image: string; featured: boolean; createdAt: string };
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!await isAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
   const body = await req.json();
   const items = await readCollection<GalleryItem>("gallery.json", []);
@@ -15,6 +17,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!await isAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
   const items = await readCollection<GalleryItem>("gallery.json", []);
   const next = items.filter((x) => x.id !== id);

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { readCollection, writeCollection } from "@/lib/db";
+import { isAdmin } from "@/lib/auth";
 
 type GalleryItem = { id: string; title: string; category: string; image: string; featured: boolean; createdAt: string };
 
@@ -8,8 +9,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  if (!await isAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await req.json();
-  if (!String(body.image || "").trim()) return NextResponse.json({ error: "Image URL is required" }, { status: 400 });
+  if (!String(body.image || "").trim()) return NextResponse.json({ error: "Image is required" }, { status: 400 });
   const items = await readCollection<GalleryItem>("gallery.json", []);
   const item: GalleryItem = {
     id: body.id || `gallery-${Date.now()}`,

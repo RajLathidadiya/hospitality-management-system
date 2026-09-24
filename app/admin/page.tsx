@@ -218,6 +218,11 @@
     const [packageForm, setPackageForm] =
         useState<any>(blankPackage);
     const [galleryForm, setGalleryForm] = useState<any>(blankGallery);
+    const [propImageFile, setPropImageFile] = useState<File | null>(null);
+    const [eventImageFile, setEventImageFile] = useState<File | null>(null);
+    const [roomImageFile, setRoomImageFile] = useState<File | null>(null);
+    const [packageImageFile, setPackageImageFile] = useState<File | null>(null);
+    const [galleryImageFile, setGalleryImageFile] = useState<File | null>(null);
     const [reviewForm, setReviewForm] = useState<any>(blankReview);
     const [settingsForm, setSettingsForm] = useState<SiteSettings>(blankSettings);
 
@@ -424,7 +429,7 @@
         ...p,
         amenities: p.amenities.join(', '),
         });
-
+        setPropImageFile(null);
         setShowProp(true);
     }
 
@@ -436,6 +441,7 @@
         services: x.services.join(', '),
         });
 
+        setEventImageFile(null);
         setShowEvent(true);
     }
 
@@ -449,12 +455,14 @@
         services: x.services.join(', '),
         });
 
+        setPackageImageFile(null);
         setShowPackage(true);
     }
 
     function editGallery(x: GalleryItem) {
         setEditingGallery(x);
         setGalleryForm({ title: x.title, category: x.category, image: x.image, featured: x.featured });
+        setGalleryImageFile(null);
         setShowGallery(true);
     }
 
@@ -466,12 +474,30 @@
 
     async function saveGallery(e: any) {
         e.preventDefault();
-        const url = editingGallery ? `/api/gallery/${editingGallery.id}` : '/api/gallery';
-        const r = await fetch(url, { method: editingGallery ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...galleryForm, featured: Boolean(galleryForm.featured) }) });
-        const d = await r.json();
-        if (!r.ok) { setMessage(d.error || 'Could not save gallery item'); return; }
-        setMessage(editingGallery ? 'Gallery item updated successfully' : 'Gallery item added successfully');
-        setShowGallery(false); setEditingGallery(null); setGalleryForm(blankGallery); load();
+        try {
+            let image = galleryForm.image || '';
+            if (galleryImageFile) {
+                setMessage('Uploading gallery image...');
+                image = await uploadImage(galleryImageFile);
+            }
+            if (!image) {
+                setMessage('Please choose an image file.');
+                return;
+            }
+            const url = editingGallery ? `/api/gallery/${editingGallery.id}` : '/api/gallery';
+            const r = await fetch(url, {
+                method: editingGallery ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ ...galleryForm, image, featured: Boolean(galleryForm.featured) }),
+            });
+            const d = await r.json();
+            if (!r.ok) { setMessage(d.error || 'Could not save gallery item'); return; }
+            setMessage(editingGallery ? 'Gallery item updated successfully' : 'Gallery item added successfully');
+            setShowGallery(false); setEditingGallery(null); setGalleryForm(blankGallery); setGalleryImageFile(null); load();
+        } catch (error: any) {
+            setMessage(error?.message || 'Could not save gallery item');
+        }
     }
 
     async function saveReview(e: any) {
@@ -513,6 +539,7 @@
         setRoomProperty(p);
         setEditingRoom(r || null);
         setRoomForm(r || blankRoom);
+        setRoomImageFile(null);
         setShowRoom(true);
     }
 
@@ -556,13 +583,30 @@
         }
     }
 
+    async function uploadImage(file: File) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await fetch('/api/admin/upload', { method: 'POST', body: formData, credentials: 'same-origin' });
+        const raw = await response.text();
+        let data: any = {};
+        try { data = raw ? JSON.parse(raw) : {}; } catch { data = { error: raw || 'Upload failed' }; }
+        if (!response.ok) throw new Error(data.error || 'Could not upload image');
+        return String(data.url || '');
+    }
+
     async function saveProperty(e: any) {
         e.preventDefault();
         setMessage('Saving property...');
 
         try {
+        let image = propForm.image || '';
+        if (propImageFile) {
+            setMessage('Uploading property image...');
+            image = await uploadImage(propImageFile);
+        }
         const body = {
             ...propForm,
+            image,
             price: Number(propForm.price) || 0,
             guests: Number(propForm.guests) || 0,
             amenities: String(propForm.amenities || '')
@@ -585,6 +629,7 @@
         setShowProp(false);
         setEditingProp(null);
         setPropForm(blankProperty);
+        setPropImageFile(null);
         await load();
         } catch (error: any) {
         console.error('Save property error:', error);
@@ -597,8 +642,14 @@
         setMessage('Saving event...');
 
         try {
+        let image = eventForm.image || '';
+        if (eventImageFile) {
+            setMessage('Uploading event image...');
+            image = await uploadImage(eventImageFile);
+        }
         const body = {
             ...eventForm,
+            image,
             services: String(eventForm.services || '')
             .split(',')
             .map((x: string) => x.trim())
@@ -619,6 +670,7 @@
         setShowEvent(false);
         setEditingEvent(null);
         setEventForm(blankEvent);
+        setEventImageFile(null);
         await load();
         } catch (error: any) {
         console.error('Save event error:', error);
@@ -636,12 +688,17 @@
             .map((x: string) => x.trim())
             .filter(Boolean);
 
+        let image = packageForm.image || '';
+        if (packageImageFile) {
+            setMessage('Uploading package image...');
+            image = await uploadImage(packageImageFile);
+        }
         const body = {
             title: packageForm.title,
             name: packageForm.title,
             description: packageForm.description,
             text: packageForm.description,
-            image: packageForm.image,
+            image,
             services,
         };
 
@@ -659,6 +716,7 @@
         setShowPackage(false);
         setEditingPackage(null);
         setPackageForm(blankPackage);
+        setPackageImageFile(null);
         await load();
         } catch (error: any) {
         console.error('Save package error:', error);
@@ -671,8 +729,14 @@
 
         if (!roomProperty) return;
 
+        let image = roomForm.image || '';
+        if (roomImageFile) {
+            setMessage('Uploading room image...');
+            image = await uploadImage(roomImageFile);
+        }
         const body = {
         ...roomForm,
+        image,
         id: editingRoom?.id,
         price: Number(roomForm.price),
         capacity: Number(roomForm.capacity),
@@ -706,6 +770,7 @@
         setEditingRoom(null);
         setRoomProperty(null);
         setRoomForm(blankRoom);
+        setRoomImageFile(null);
 
         load();
     }
@@ -888,6 +953,7 @@
                 onAdd={() => {
                 setEditingProp(null);
                 setPropForm(blankProperty);
+                setPropImageFile(null);
                 setShowProp(true);
                 }}
                 onEdit={editProperty}
@@ -910,6 +976,7 @@
                 onAdd={() => {
                 setEditingEvent(null);
                 setEventForm(blankEvent);
+                setEventImageFile(null);
                 setShowEvent(true);
                 }}
                 onEdit={editEvent}
@@ -923,6 +990,7 @@
                 onAdd={() => {
                 setEditingPackage(null);
                 setPackageForm(blankPackage);
+                setPackageImageFile(null);
                 setShowPackage(true);
                 }}
                 onEdit={editPackage}
@@ -945,7 +1013,7 @@
             )}
 
             {active === 'Gallery' && (
-              <GalleryPanel gallery={gallery} onAdd={() => { setEditingGallery(null); setGalleryForm(blankGallery); setShowGallery(true); }} onEdit={editGallery} onDelete={removeGallery} />
+              <GalleryPanel gallery={gallery} onAdd={() => { setEditingGallery(null); setGalleryForm(blankGallery); setGalleryImageFile(null); setShowGallery(true); }} onEdit={editGallery} onDelete={removeGallery} />
             )}
 
             {active === 'Reviews' && (
@@ -994,7 +1062,7 @@
                 <form className="admin-form" onSubmit={saveGallery}>
                   <label>Title<input value={galleryForm.title} onChange={(e) => setGalleryForm({ ...galleryForm, title: e.target.value })} placeholder="Pool, Room, Wedding setup..." /></label>
                   <label>Category<select value={galleryForm.category} onChange={(e) => setGalleryForm({ ...galleryForm, category: e.target.value })}><option>General</option><option>Properties</option><option>Rooms</option><option>Events</option><option>Weddings</option><option>Food</option></select></label>
-                  <label>Image URL<input required value={galleryForm.image} onChange={(e) => setGalleryForm({ ...galleryForm, image: e.target.value })} placeholder="https://..." /></label>
+                  <label>Image File<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" required={!galleryImageFile && !galleryForm.image} onChange={(e) => setGalleryImageFile(e.target.files?.[0] || null)} /><small className="admin-file-help">JPG, PNG, WEBP or GIF · max 10 MB · choose a new file only if you want to replace the current image</small>{!galleryImageFile && galleryForm.image ? <img className="admin-image-preview" src={galleryForm.image} alt="Current gallery image" /> : null}</label>
                   <label className="admin-check"><input type="checkbox" checked={Boolean(galleryForm.featured)} onChange={(e) => setGalleryForm({ ...galleryForm, featured: e.target.checked })} /> Featured image</label>
                   <button className="admin-primary">{editingGallery ? 'Update Gallery Item' : 'Save Gallery Item'}</button>
                 </form>
@@ -1118,17 +1186,15 @@
                 </div>
 
                 <label>
-                    Image URL
-
+                    Image File
                     <input
-                    value={propForm.image}
-                    onChange={(e) =>
-                        setPropForm({
-                        ...propForm,
-                        image: e.target.value,
-                        })
-                    }
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    required={!propImageFile && !propForm.image}
+                    onChange={(e) => setPropImageFile(e.target.files?.[0] || null)}
                     />
+                    <small className="admin-file-help">JPG, PNG, WEBP or GIF · max 10 MB · choose a new file only if you want to replace the current image</small>
+                    {!propImageFile && propForm.image ? <img className="admin-image-preview" src={propForm.image} alt="Current image" /> : null}
                 </label>
 
                 <label>
@@ -1238,18 +1304,15 @@
                 </label>
 
                 <label>
-                    Image URL
-
+                    Image File
                     <input
-                    value={eventForm.image}
-                    onChange={(e) =>
-                        setEventForm({
-                        ...eventForm,
-                        image:
-                            e.target.value,
-                        })
-                    }
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    required={!eventImageFile && !eventForm.image}
+                    onChange={(e) => setEventImageFile(e.target.files?.[0] || null)}
                     />
+                    <small className="admin-file-help">JPG, PNG, WEBP or GIF · max 10 MB · choose a new file only if you want to replace the current image</small>
+                    {!eventImageFile && eventForm.image ? <img className="admin-image-preview" src={eventForm.image} alt="Current image" /> : null}
                 </label>
 
                 <label>
@@ -1332,18 +1395,15 @@
                 </label>
 
                 <label>
-                    Image URL
-
+                    Image File
                     <input
-                    value={packageForm.image}
-                    onChange={(e) =>
-                        setPackageForm({
-                        ...packageForm,
-                        image:
-                            e.target.value,
-                        })
-                    }
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    required={!packageImageFile && !packageForm.image}
+                    onChange={(e) => setPackageImageFile(e.target.files?.[0] || null)}
                     />
+                    <small className="admin-file-help">JPG, PNG, WEBP or GIF · max 10 MB · choose a new file only if you want to replace the current image</small>
+                    {!packageImageFile && packageForm.image ? <img className="admin-image-preview" src={packageForm.image} alt="Current image" /> : null}
                 </label>
 
                 <label>
@@ -1472,18 +1532,15 @@
                 </div>
 
                 <label>
-                    Image URL
-
+                    Image File
                     <input
-                    value={roomForm.image}
-                    onChange={(e) =>
-                        setRoomForm({
-                        ...roomForm,
-                        image:
-                            e.target.value,
-                        })
-                    }
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    required={!roomImageFile && !roomForm.image}
+                    onChange={(e) => setRoomImageFile(e.target.files?.[0] || null)}
                     />
+                    <small className="admin-file-help">JPG, PNG, WEBP or GIF · max 10 MB · choose a new file only if you want to replace the current image</small>
+                    {!roomImageFile && roomForm.image ? <img className="admin-image-preview" src={roomForm.image} alt="Current image" /> : null}
                 </label>
 
                 <button className="admin-primary">

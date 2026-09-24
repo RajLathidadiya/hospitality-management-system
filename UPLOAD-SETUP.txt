@@ -1,0 +1,21 @@
+SAWARIYA ADMIN IMAGE UPLOAD UPDATE
+
+Admin image fields now use Choose File instead of Image URL for:
+- Properties
+- Rooms
+- Events
+- Packages
+- Gallery
+
+Accepted: JPG, PNG, WEBP, GIF
+Maximum: 10 MB per image
+
+Uploaded files are stored in:
+public/uploads/
+
+The image URL is automatically saved in the existing database record, so the public website continues to use the same image fields.
+
+IMPORTANT FOR HOSTINGER:
+The Node.js app must have write permission to the project public/uploads directory. The project is designed for a persistent filesystem such as a normal Hostinger Node.js deployment. If moved to a serverless platform with ephemeral storage, replace this uploader with persistent object storage (S3/Cloudinary/etc.).
+
+No .env credentials are included in the updated ZIP. Keep the existing production .env/environment variables on the server.
