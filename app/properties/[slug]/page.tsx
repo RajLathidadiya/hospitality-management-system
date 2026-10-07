@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { formatPrice } from '../../../lib/properties';
 import { getProperties } from '../../../lib/property-data';
+import RoomSlideshow from '../../components/RoomSlideshow';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -14,6 +15,7 @@ const whatsapp = (message: string) =>
 type Room = {
   name: string;
   image: string;
+  images?: string[];
   capacity: number;
   bed: string;
   size: string;
@@ -177,11 +179,10 @@ export default async function PropertyDetailPage({
                       className="detail-room-card"
                       key={room.name}
                     >
-                      <div
-                        className="detail-room-image"
-                        style={{
-                          backgroundImage: `url(${room.image})`,
-                        }}
+                      <RoomSlideshow
+                        images={room.images}
+                        fallback={room.image}
+                        alt={`${room.name} at ${property.name}`}
                       />
 
                       <div className="detail-room-info">

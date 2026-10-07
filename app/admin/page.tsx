@@ -10,6 +10,7 @@
     bed: string;
     size: string;
     image: string;
+    images?: string[];
     status?: string;
     };
 
@@ -21,6 +22,7 @@
     location: string;
     price: number;
     guests: number;
+    rating: number;
     image: string;
     description: string;
     amenities: string[];
@@ -120,6 +122,7 @@
     location: 'Udaipur, Rajasthan',
     price: 4999,
     guests: 2,
+    rating: 5,
     image: '',
     description: '',
     amenities: 'WiFi, Parking',
@@ -132,6 +135,7 @@
     bed: 'King Bed',
     size: '',
     image: '',
+    images: [],
     };
 
     const blankEvent = {
@@ -220,7 +224,7 @@
     const [galleryForm, setGalleryForm] = useState<any>(blankGallery);
     const [propImageFile, setPropImageFile] = useState<File | null>(null);
     const [eventImageFile, setEventImageFile] = useState<File | null>(null);
-    const [roomImageFile, setRoomImageFile] = useState<File | null>(null);
+    const [roomImageFiles, setRoomImageFiles] = useState<File[]>([]);
     const [packageImageFile, setPackageImageFile] = useState<File | null>(null);
     const [galleryImageFile, setGalleryImageFile] = useState<File | null>(null);
     const [reviewForm, setReviewForm] = useState<any>(blankReview);
@@ -535,11 +539,24 @@
         setSettingsForm((prev) => ({ ...prev, [key]: value }));
     }
 
+    function getRoomImages(r?: Room | null): string[] {
+        if (!r) return [];
+        if (Array.isArray(r.images)) return r.images.filter(Boolean).slice(0, 5);
+        if (r.image) {
+            try {
+                const parsed = JSON.parse(r.image);
+                if (Array.isArray(parsed)) return parsed.filter(Boolean).slice(0, 5);
+            } catch {}
+            return [r.image];
+        }
+        return [];
+    }
+
     function openRoom(p: Property, r?: Room) {
         setRoomProperty(p);
         setEditingRoom(r || null);
-        setRoomForm(r || blankRoom);
-        setRoomImageFile(null);
+        setRoomForm(r ? { ...r, images: getRoomImages(r) } : blankRoom);
+        setRoomImageFiles([]);
         setShowRoom(true);
     }
 
@@ -609,6 +626,7 @@
             image,
             price: Number(propForm.price) || 0,
             guests: Number(propForm.guests) || 0,
+            rating: Math.max(0, Math.min(5, Number(propForm.rating) || 0)),
             amenities: String(propForm.amenities || '')
             .split(',')
             .map((x: string) => x.trim())
@@ -729,50 +747,72 @@
 
         if (!roomProperty) return;
 
-        let image = roomForm.image || '';
-        if (roomImageFile) {
-            setMessage('Uploading room image...');
-            image = await uploadImage(roomImageFile);
+        try {
+            let images: string[] = Array.isArray(roomForm.images)
+                ? roomForm.images.filter(Boolean).slice(0, 5)
+                : getRoomImages(roomForm);
+
+            if (roomImageFiles.length) {
+                if (roomImageFiles.length > 5) {
+                    setMessage('You can select maximum 5 room photos.');
+                    return;
+                }
+                setMessage(`Uploading ${roomImageFiles.length} room photo${roomImageFiles.length > 1 ? 's' : ''}...`);
+                images = [];
+                for (const file of roomImageFiles) {
+                    images.push(await uploadImage(file));
+                }
+            }
+
+            if (!images.length) {
+                setMessage('Please choose at least one room photo.');
+                return;
+            }
+
+            const body = {
+                ...roomForm,
+                images,
+                image: images[0],
+                id: editingRoom?.id,
+                price: Number(roomForm.price),
+                capacity: Number(roomForm.capacity),
+            };
+
+            const r = await fetch(
+                `/api/properties/${roomProperty.slug}/rooms`,
+                {
+                    method: editingRoom ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body),
+                }
+            );
+
+            const d = await r.json();
+
+            if (!r.ok) {
+                setMessage(d.error || 'Could not save');
+                return;
+            }
+
+            setMessage(
+                editingRoom
+                    ? 'Room updated successfully'
+                    : 'Room submitted for Superadmin approval'
+            );
+
+            setShowRoom(false);
+            setEditingRoom(null);
+            setRoomProperty(null);
+            setRoomForm(blankRoom);
+            setRoomImageFiles([]);
+
+            load();
+        } catch (error: any) {
+            console.error('Save room error:', error);
+            setMessage(error?.message || 'Could not save room');
         }
-        const body = {
-        ...roomForm,
-        image,
-        id: editingRoom?.id,
-        price: Number(roomForm.price),
-        capacity: Number(roomForm.capacity),
-        };
-
-        const r = await fetch(
-        `/api/properties/${roomProperty.slug}/rooms`,
-        {
-            method: editingRoom ? 'PUT' : 'POST',
-            headers: {
-            'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body),
-        }
-        );
-
-        const d = await r.json();
-
-        if (!r.ok) {
-        setMessage(d.error || 'Could not save');
-        return;
-        }
-
-        setMessage(
-        editingRoom
-            ? 'Room updated successfully'
-            : 'Room submitted for Superadmin approval'
-        );
-
-        setShowRoom(false);
-        setEditingRoom(null);
-        setRoomProperty(null);
-        setRoomForm(blankRoom);
-        setRoomImageFile(null);
-
-        load();
     }
 
     async function removeProperty(slug: string) {
@@ -1186,6 +1226,23 @@
                 </div>
 
                 <label>
+                    Rating (0–5)
+                    <input
+                    type="number"
+                    min="0"
+                    max="5"
+                    step="0.5"
+                    value={propForm.rating}
+                    onChange={(e) =>
+                        setPropForm({
+                            ...propForm,
+                            rating: e.target.value,
+                        })
+                    }
+                    />
+                </label>
+
+                <label>
                     Image File
                     <input
                     type="file"
@@ -1532,15 +1589,30 @@
                 </div>
 
                 <label>
-                    Image File
+                    Room Photos (maximum 5)
                     <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp,image/gif"
-                    required={!roomImageFile && !roomForm.image}
-                    onChange={(e) => setRoomImageFile(e.target.files?.[0] || null)}
+                    multiple
+                    onChange={(e) => {
+                        const files = Array.from(e.target.files || []).slice(0, 5);
+                        setRoomImageFiles(files);
+                        if ((e.target.files?.length || 0) > 5) {
+                            setMessage('Only the first 5 room photos were selected.');
+                        }
+                    }}
                     />
-                    <small className="admin-file-help">JPG, PNG, WEBP or GIF · max 10 MB · choose a new file only if you want to replace the current image</small>
-                    {!roomImageFile && roomForm.image ? <img className="admin-image-preview" src={roomForm.image} alt="Current image" /> : null}
+                    <small className="admin-file-help">Select up to 5 photos · JPG, PNG, WEBP or GIF · max 10 MB each. Selecting new photos replaces the current room gallery.</small>
+                    {(roomForm.images?.length || 0) > 0 ? (
+                        <div className="admin-room-photo-preview-grid">
+                            {roomForm.images.slice(0, 5).map((url: string, index: number) => (
+                                <img key={`${url}-${index}`} className="admin-image-preview" src={url} alt={`Room photo ${index + 1}`} />
+                            ))}
+                        </div>
+                    ) : null}
+                    {roomImageFiles.length ? (
+                        <small className="admin-file-help">{roomImageFiles.length} new photo{roomImageFiles.length > 1 ? 's' : ''} selected.</small>
+                    ) : null}
                 </label>
 
                 <button className="admin-primary">

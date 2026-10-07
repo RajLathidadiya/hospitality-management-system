@@ -47,16 +47,25 @@ export async function readCollection<T>(name: string, fallback: T[] = [], option
         image: p.image,
         description: p.description,
         amenities: parseJson<string[]>(p.amenities, []),
-        rooms: p.rooms.map((r) => ({
-          id: r.id,
-          name: r.name,
-          price: r.price,
-          capacity: r.capacity,
-          bed: r.bed,
-          size: r.size,
-          image: r.image,
-          status: r.status,
-        })),
+        rooms: p.rooms.map((r) => {
+          let images: string[] = [];
+          try {
+            const parsed = JSON.parse(r.image || '');
+            if (Array.isArray(parsed)) images = parsed.filter(Boolean).slice(0, 5);
+          } catch {}
+          if (!images.length && r.image) images = [r.image];
+          return {
+            id: r.id,
+            name: r.name,
+            price: r.price,
+            capacity: r.capacity,
+            bed: r.bed,
+            size: r.size,
+            image: images[0] || '',
+            images,
+            status: r.status,
+          };
+        }),
       })) as T[];
     }
 
@@ -199,7 +208,9 @@ export async function writeCollection<T extends Record<string, any>>(
                   capacity: Number(r.capacity || 2),
                   bed: String(r.bed || "King Bed"),
                   size: String(r.size || ""),
-                  image: String(r.image || ""),
+                  image: Array.isArray(r.images) && r.images.length
+                    ? JSON.stringify(r.images.slice(0, 5))
+                    : String(r.image || ""),
                   status: String(r.status || "APPROVED"),
                 })),
               },
