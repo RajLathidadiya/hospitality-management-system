@@ -232,26 +232,39 @@ export default async function PropertyDetailPage({
               LOCATION
             </p>
 
-            <div className="map-embed">
-              <iframe
-                title={`Map of ${property.location}`}
-                src={`https://www.google.com/maps?q=${encodeURIComponent(
-                  property.location
-                )}&output=embed`}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            </div>
+            {process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY ? (
+              <div className="map-embed">
+                <iframe
+                  title={`Directions to ${property.location}`}
+                  src={`https://www.google.com/maps/embed/v1/directions?key=${encodeURIComponent(
+                    process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY
+                  )}&origin=Current+Location&destination=${encodeURIComponent(
+                    property.location
+                  )}&mode=driving`}
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              <div className="directions-only-card">
+                <div className="directions-map-mark">⌖</div>
+                <div>
+                  <strong>{property.location}</strong>
+                  <p>Get directions to this property without opening its public listing.</p>
+                </div>
+              </div>
+            )}
 
             <a
               className="map-open-link"
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
                 property.location
-              )}`}
+              )}&travelmode=driving`}
               target="_blank"
               rel="noreferrer"
             >
-              Open in Google Maps ↗
+              Get Directions ↗
             </a>
           </div>
         </div>
