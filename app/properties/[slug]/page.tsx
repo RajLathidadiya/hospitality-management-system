@@ -235,24 +235,26 @@ export default async function PropertyDetailPage({
             {process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY ? (
               <div className="map-embed">
                 <iframe
-                  title={`Directions to ${property.location}`}
-                  src={`https://www.google.com/maps/embed/v1/directions?key=${encodeURIComponent(
+                  title={`Map for ${property.location}`}
+                  src={`https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(
                     process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY
-                  )}&origin=Current+Location&destination=${encodeURIComponent(
-                    property.location
-                  )}&mode=driving`}
+                  )}&q=${encodeURIComponent(property.location)}&zoom=15`}
                   loading="lazy"
                   referrerPolicy="strict-origin-when-cross-origin"
                   allowFullScreen
                 />
               </div>
             ) : (
-              <div className="directions-only-card">
-                <div className="directions-map-mark">⌖</div>
-                <div>
-                  <strong>{property.location}</strong>
-                  <p>Get directions to this property without opening its public listing.</p>
-                </div>
+              <div className="map-embed map-fallback">
+                <iframe
+                  title={`Map for ${property.location}`}
+                  src={`https://www.google.com/maps?q=${encodeURIComponent(
+                    property.location
+                  )}&output=embed`}
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
               </div>
             )}
 
