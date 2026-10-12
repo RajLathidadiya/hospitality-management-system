@@ -10,6 +10,7 @@ function makeToken(email: string, secret: string) {
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Keep admin login and protected admin panels available to the site owner.
   if (pathname === '/admin/login' || pathname === '/superadmin/login') {
     return NextResponse.next();
   }
@@ -39,11 +40,18 @@ export function middleware(req: NextRequest) {
       loginUrl.search = '';
       return NextResponse.redirect(loginUrl);
     }
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  // TEMPORARY SUSPENSION: all public-facing website pages show only this notice.
+  // To restore the original site after payment, remove this rewrite block and
+  // restore the original matcher at the bottom of this file, then redeploy.
+  const suspendedUrl = req.nextUrl.clone();
+  suspendedUrl.pathname = '/suspended';
+  suspendedUrl.search = '';
+  return NextResponse.rewrite(suspendedUrl);
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/superadmin/:path*'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|suspended).*)'],
 };

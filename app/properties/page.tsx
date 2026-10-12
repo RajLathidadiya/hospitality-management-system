@@ -8,25 +8,6 @@ type Property = { slug:string; name:string; type:string; location:string; city?:
 
 const whatsapp = (message: string) => `https://wa.me/9116667045?text=${encodeURIComponent(message)}`;
 
-function RatingStars({ rating }: { rating: number }) {
-  const safe = Math.max(0, Math.min(5, Number(rating) || 0));
-  return (
-    <span className="rating-stars" aria-label={`${safe} out of 5 stars`}>
-      {[0, 1, 2, 3, 4].map((star) => {
-        const fill = Math.max(0, Math.min(1, safe - star));
-        return (
-          <span
-            key={star}
-            className={fill >= 1 ? 'rating-star full' : fill >= 0.5 ? 'rating-star half' : 'rating-star empty'}
-          >
-            ★
-          </span>
-        );
-      })}
-    </span>
-  );
-}
-
 export default function PropertiesPage() {
   const [query, setQuery] = useState('');
   const [type, setType] = useState('All');
@@ -134,7 +115,7 @@ export default function PropertiesPage() {
                   {property.featured && <span className="image-badge">FEATURED</span>}
                 </Link>
                 <div className="property-body">
-                  <div className="property-topline"><RatingStars rating={property.rating} /><span className="rating">{property.rating}</span><span className="type-pill">{property.type}</span></div>
+                  <div className="property-topline"><span className="stars">★★★★★</span><span className="rating">{property.rating}</span><span className="type-pill">{property.type}</span></div>
                   <h3>{property.name}</h3>
                   <p className="muted">⌖ {property.location}</p>
                   <p className="property-description">{property.description}</p>

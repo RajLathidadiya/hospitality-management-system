@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { formatPrice } from '../../../lib/properties';
 import { getProperties } from '../../../lib/property-data';
-import RoomSlideshow from '../../components/RoomSlideshow';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -15,7 +14,6 @@ const whatsapp = (message: string) =>
 type Room = {
   name: string;
   image: string;
-  images?: string[];
   capacity: number;
   bed: string;
   size: string;
@@ -179,10 +177,11 @@ export default async function PropertyDetailPage({
                       className="detail-room-card"
                       key={room.name}
                     >
-                      <RoomSlideshow
-                        images={room.images}
-                        fallback={room.image}
-                        alt={`${room.name} at ${property.name}`}
+                      <div
+                        className="detail-room-image"
+                        style={{
+                          backgroundImage: `url(${room.image})`,
+                        }}
                       />
 
                       <div className="detail-room-info">
@@ -232,41 +231,26 @@ export default async function PropertyDetailPage({
               LOCATION
             </p>
 
-            {process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY ? (
-              <div className="map-embed">
-                <iframe
-                  title={`Map for ${property.location}`}
-                  src={`https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(
-                    process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY
-                  )}&q=${encodeURIComponent(property.location)}&zoom=15`}
-                  loading="lazy"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                />
-              </div>
-            ) : (
-              <div className="map-embed map-fallback">
-                <iframe
-                  title={`Map for ${property.location}`}
-                  src={`https://www.google.com/maps?q=${encodeURIComponent(
-                    property.location
-                  )}&output=embed`}
-                  loading="lazy"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                />
-              </div>
-            )}
+            <div className="map-embed">
+              <iframe
+                title={`Map of ${property.location}`}
+                src={`https://www.google.com/maps?q=${encodeURIComponent(
+                  property.location
+                )}&output=embed`}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
 
             <a
               className="map-open-link"
-              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                 property.location
-              )}&travelmode=driving`}
+              )}`}
               target="_blank"
               rel="noreferrer"
             >
-              Get Directions ↗
+              Open in Google Maps ↗
             </a>
           </div>
         </div>

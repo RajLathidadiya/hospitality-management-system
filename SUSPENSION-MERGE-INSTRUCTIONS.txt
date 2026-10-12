@@ -1,0 +1,18 @@
+SAWARIYA HOSPITALITY — SUSPENSION BUILD
+
+This is the merged project source with a temporary suspension page enabled for public-facing website routes.
+
+IMPORTANT:
+- The original source pages are retained.
+- .git, node_modules, .next, local .env and TypeScript build cache were intentionally excluded.
+- Keep your existing local .env file; do not upload it to GitHub. Your Hostinger environment variables should remain configured in hPanel.
+- API routes are excluded from the suspension rewrite, and /admin and /superadmin remain subject to the project's existing middleware checks.
+
+TO USE:
+1. Extract this ZIP.
+2. Copy/merge its files into your existing project folder (do not delete your existing .env or .git folder).
+3. Review the changes, then commit and push to the connected GitHub branch.
+4. Wait for Hostinger deployment, then test the public website in a private/incognito window.
+
+TO RESTORE AFTER PAYMENT:
+Restore the original middleware.ts from your Git history (or remove the public-facing rewrite block and restore the original matcher), then commit/push and redeploy. The original page files have not been deleted.

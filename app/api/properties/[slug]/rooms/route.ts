@@ -34,7 +34,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
       capacity: Number(body.capacity || 2),
       bed: body.bed || 'King Bed',
       size: body.size || '',
-      image: JSON.stringify(Array.isArray(body.images) && body.images.length ? body.images.slice(0, 5) : [body.image || '']),
+      image: body.image || '',
       status: 'PENDING',
     },
   });
@@ -66,7 +66,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
       capacity: Number(body.capacity ?? existing.capacity),
       bed: body.bed ?? existing.bed,
       size: body.size ?? existing.size,
-      image: Array.isArray(body.images) && body.images.length ? JSON.stringify(body.images.slice(0, 5)) : (body.image ?? existing.image),
+      image: body.image ?? existing.image,
       // Keep the current approval state when editing an existing room.
       status: existing.status,
     },
